@@ -1,11 +1,9 @@
-import axios from 'axios';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const AUTH_TOKEN = '38178261-5d1780438eb32c09ef72874ba';
-
-const BASE_URL = 'https://pixabay.com/api/';
+import { getImages } from './images';
+import { imagesMarkup } from './markup';
 
 const searchForm = document.querySelector('.search-form');
 const galleryEls = document.querySelector('.gallery');
@@ -20,12 +18,18 @@ loadMoreBtn.addEventListener('click', onLoadMoreBtnClick);
 
 let currentPage = 1;
 let totalPage = 0;
+let queryImages = '';
+
+export { currentPage, queryImages };
 
 async function onSearchFormSubmit(event) {
   event.preventDefault();
-  currentPage = 1;
+  loadMoreBtn.style.display = 'none';
 
-  if (!searchForm.firstElementChild.value) {
+  currentPage = 1;
+  queryImages = searchForm.firstElementChild.value;
+
+  if (!queryImages) {
     event.currentTarget.reset();
     galleryEls.innerHTML = '';
     loadMoreBtn.style.display = 'none';
@@ -62,60 +66,6 @@ async function onSearchFormSubmit(event) {
     loadMoreBtn.style.display = 'none';
     currentPage = 1;
   }
-}
-
-async function getImages() {
-  try {
-    const arrImages = await axios.get(BASE_URL, {
-      params: {
-        key: AUTH_TOKEN,
-        q: searchForm.firstElementChild.value,
-        image_type: 'photo',
-        orientation: 'horizontal',
-        safesearch: true,
-        per_page: 40,
-        page: currentPage,
-      },
-    });
-    return arrImages;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-function imagesMarkup(arr) {
-  return arr
-    .map(
-      ({
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      }) =>
-        `<div class="photo-card">
-            <a href="${largeImageURL}">
-              <img src="${webformatURL}" alt="${tags}" loading="lazy"/>
-            </a>
-            <div class="info">
-                <p class="info-item">
-                    <b>Likes</b>${likes}
-                </p>
-                <p class="info-item">
-                    <b>Views</b>${views}
-                </p>
-                <p class="info-item">
-                    <b>Comments</b>${comments}
-                </p>
-                <p class="info-item">
-                    <b>Downloads</b>${downloads}
-                </p>
-            </div>
-        </div>`
-    )
-    .join('');
 }
 
 async function onLoadMoreBtnClick() {
